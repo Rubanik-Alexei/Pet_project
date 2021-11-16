@@ -1,28 +1,29 @@
 package main
 
 import (
-	"Pet_project/db"
 	"Pet_project/handlers"
-	"fmt"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
-func CreateHandlers(app *fiber.App) {
-	app.Get("/track", handlers.GetAlltracks)
-	app.Post("/add", handlers.AddTrack)
-	app.Get("/track/:id", handlers.GetTrack)
-	app.Delete("/track/:id", handlers.DeleteTrack)
-	app.Post("/track/:id", handlers.UpdateTrack)
+/*Commands for tests
+curl -X POST -H "Content-Type: application/json" --data "{\"Artist\":\"Bones\",\"Name\":\"Dirt\",\"Genre\":\"Cloud\"}"  http://localhost:9000/add
+
+*/
+
+func CreateHandlers(handler *handlers.DB, app *fiber.App) {
+	app.Get("/track", handler.GetAlltracks)
+	app.Post("/add", handler.AddTrack)
+	app.Get("/track/:id", handler.GetTrack)
+	app.Delete("/track/:id", handler.DeleteTrack)
+	app.Post("/track/:id", handler.UpdateTrack)
 }
 
 func main() {
 	fiberApp := fiber.New()
-	dbConn, err := db.ConnectToDB()
-	if err != nil {
-		panic("Cannot connect to database")
-	}
-	fmt.Println("Connected to DB")
-	fiberApp.Listen(9000)
-	defer dbConn.Close()
+	handler := handlers.NewDB()
+	defer handler.Db.Close()
+	CreateHandlers(handler, fiberApp)
+	fiberApp.Listen("localhost:9000")
+
 }
