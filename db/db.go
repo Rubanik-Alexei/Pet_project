@@ -2,6 +2,7 @@ package db
 
 import (
 	"os"
+	"reflect"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -52,10 +53,31 @@ func DeleteTracks(db *gorm.DB, track *Track, id int) error {
 }
 
 func UpdateTrack(db *gorm.DB, track *Track, id int) error {
-	err := db.Where("id=?").Error
-	if err != nil {
-		return err
+	tmp := reflect.ValueOf(track)
+	if tmp.Kind() == reflect.Ptr {
+		tmp = tmp.Elem()
 	}
-	db.Save(track)
-	return nil
+	for i := 0; i < tmp.NumField(); i++ {
+		kind := tmp.Field(i).Kind()
+		if kind != reflect.Struct {
+			if !tmp.Field(i).IsZero() {
+				err := db.Model(&Track{}).Where("id=?", id).Update(tmp.Type().Field(i).Name, tmp.Field(i)).Error
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			for j := 0; j < tmp.Field(i).NumField(); j++ {
+				if !tmp.Field(j).IsZero() {
+					err := db.Model(&Track{}).Where("id=?", id).Update(tmp.Type().Field(j).Name, tmp.Field(j)).Error
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	err := db.First(track, id).Error
+	return err
 }

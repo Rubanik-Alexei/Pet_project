@@ -66,6 +66,23 @@ func (Db *DB) AddTrack(ctx *fiber.Ctx) error {
 	return nil
 }
 func (Db *DB) UpdateTrack(ctx *fiber.Ctx) error {
+	id, err := strconv.Atoi(ctx.Params("id"))
+	if err != nil {
+		ctx.SendString("Wrong id")
+		return err
+	}
+	var track db.Track
+	if err := ctx.BodyParser(&track); err != nil {
+		ctx.SendString("Wrong json struct")
+		return err
+	}
+	err = db.UpdateTrack(Db.Db, &track, id)
+	if err != nil {
+		ctx.SendString("Problem with updating")
+		return err
+	}
+	ctx.SendString("Successfully updated")
+	ctx.JSON(track)
 	return nil
 }
 

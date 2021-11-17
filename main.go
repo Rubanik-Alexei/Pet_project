@@ -25,5 +25,4 @@ func main() {
 	defer handler.Db.Close()
 	CreateHandlers(handler, fiberApp)
 	fiberApp.Listen("localhost:9000")
-
 }
